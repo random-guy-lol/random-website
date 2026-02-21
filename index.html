@@ -1,118 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Web-Craft 2D</title>
+    <title>The Blind Corridor</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: 'Courier New', monospace; }
-        canvas { display: block; image-rendering: pixelated; }
-        #ui { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: white; padding: 15px; border-radius: 8px; pointer-events: none; }
-        .key { color: #00ffcc; font-weight: bold; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', monospace; cursor: none; }
+        canvas { display: block; }
+        #ui { position: absolute; top: 20px; left: 20px; color: #444; pointer-events: none; }
+        #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+                   display: flex; flex-direction: column; align-items: center; justify-content: center; 
+                   background: black; color: red; transition: 1s; z-index: 10; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <div id="ui">
-        <b>WEB-CRAFT 2D</b><br>
-        <span class="key">WASD / Arrows</span>: Move & Jump<br>
-        <span class="key">Left Click</span>: Mine Block<br>
-        <span class="key">Right Click</span>: Place Block<br>
-        <span class="key">1, 2, 3</span>: Switch Blocks
+    <div id="ui">KEYS FOUND: <span id="keys">0</span>/5</div>
+    
+    <div id="overlay">
+        <h1 id="status">THERE IS SOMETHING IN THE DARK</h1>
+        <button onclick="startGame()" style="background:none; border:1px solid red; color:red; padding:10px 20px; cursor:pointer;">ENTER</button>
     </div>
+
     <canvas id="gameCanvas"></canvas>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-
-        // Game Constants
-        const blockSize = 32;
-        const gravity = 0.5;
-        const jumpForce = -10;
-        const moveSpeed = 4;
-
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // World Data
-        let world = {};
-        let selectedBlock = 1; // 1: Grass, 2: Dirt, 3: Stone
-        const blockColors = { 1: '#55aa55', 2: '#8b5a2b', 3: '#777777' };
+        let gameActive = false;
+        let keysFound = 0;
+        let mouse = { x: 0, y: 0 };
+        let items = [];
+        let monster = { x: -100, y: -100, speed: 1.5, active: false };
+        let flicker = 0;
 
-        // Player Data
-        const player = {
-            x: 100, y: 0,
-            w: 24, h: 28,
-            vx: 0, vy: 0,
-            onGround: false
-        };
+        window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
-        // Generate World
-        for (let x = 0; x < canvas.width / blockSize; x++) {
-            let surfaceY = Math.floor(canvas.height / 2 / blockSize) + Math.floor(Math.sin(x * 0.2) * 2);
-            for (let y = surfaceY; y < canvas.height / blockSize; y++) {
-                let type = (y === surfaceY) ? 1 : (y < surfaceY + 3 ? 2 : 3);
-                world[`${x},${y}`] = type;
+        function startGame() {
+            document.getElementById('overlay').classList.add('hidden');
+            gameActive = true;
+            keysFound = 0;
+            items = [];
+            spawnItems();
+            setTimeout(() => { monster.active = true; }, 5000); // Monster wakes up after 5s
+            update();
+        }
+
+        function spawnItems() {
+            for(let i=0; i<5; i++) {
+                items.push({
+                    x: Math.random() * (canvas.width - 50) + 25,
+                    y: Math.random() * (canvas.height - 50) + 25,
+                    picked: false
+                });
             }
         }
 
-        // Input Handling
-        const keys = {};
-        window.addEventListener('keydown', e => {
-            keys[e.code] = true;
-            if (e.key === '1') selectedBlock = 1;
-            if (e.key === '2') selectedBlock = 2;
-            if (e.key === '3') selectedBlock = 3;
-        });
-        window.addEventListener('keyup', e => keys[e.code] = false);
-
-        // Build/Mine Handling
-        canvas.addEventListener('mousedown', e => {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = Math.floor((e.clientX - rect.left) / blockSize);
-            const mouseY = Math.floor((e.clientY - rect.top) / blockSize);
-            
-            if (e.button === 0) delete world[`${mouseX},${mouseY}`]; // Left click
-            if (e.button === 2) world[`${mouseX},${mouseY}`] = selectedBlock; // Right click
-        });
-        canvas.oncontextmenu = (e) => e.preventDefault();
-
         function update() {
-            // Horizontal Move
-            player.vx = 0;
-            if (keys['KeyA'] || keys['ArrowLeft']) player.vx = -moveSpeed;
-            if (keys['KeyD'] || keys['ArrowRight']) player.vx = moveSpeed;
+            if(!gameActive) return;
 
-            // Jump
-            if ((keys['KeyW'] || keys['Space'] || keys['ArrowUp']) && player.onGround) {
-                player.vy = jumpForce;
-                player.onGround = false;
+            // Monster Logic
+            if(monster.active) {
+                let dx = mouse.x - monster.x;
+                let dy = mouse.y - monster.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                
+                // Monster moves toward the light
+                monster.x += (dx / dist) * monster.speed;
+                monster.y += (dy / dist) * monster.speed;
+
+                // Jumpscare/Game Over
+                if(dist < 30) {
+                    gameOver("YOU WERE CONSUMED");
+                }
             }
 
-            // Gravity
-            player.vy += gravity;
-            player.x += player.vx;
-            player.y += player.vy;
-
-            // Simple Collision
-            player.onGround = false;
-            Object.keys(world).forEach(key => {
-                let [bx, by] = key.split(',').map(Number);
-                let bxPos = bx * blockSize;
-                let byPos = by * blockSize;
-
-                // Basic Box Collision
-                if (player.x < bxPos + blockSize && player.x + player.w > bxPos &&
-                    player.y < byPos + blockSize && player.y + player.h > byPos) {
-                    
-                    // Reset position to top of block
-                    if (player.vy > 0 && player.y + player.h - player.vy <= byPos) {
-                        player.y = byPos - player.h;
-                        player.vy = 0;
-                        player.onGround = true;
-                    } else if (player.vy < 0) {
-                        player.y = byPos + blockSize;
-                        player.vy = 0;
-                    } else {
-                        player.x -= player.vx;
+            // Key Collection
+            items.forEach(item => {
+                if(!item.picked) {
+                    let dx = mouse.x - item.x;
+                    let dy = mouse.y - item.y;
+                    if(Math.sqrt(dx*dx + dy*dy) < 20) {
+                        item.picked = true;
+                        keysFound++;
+                        document.getElementById('keys').innerText = keysFound;
+                        monster.speed += 0.5; // He gets faster with every key
+                        if(keysFound === 5) gameOver("YOU ESCAPED THE DARK", "green");
                     }
                 }
             });
@@ -122,23 +96,54 @@
         }
 
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // 1. Fill pitch black
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw World
-            for (let key in world) {
-                let [x, y] = key.split(',').map(Number);
-                ctx.fillStyle = blockColors[world[key]];
-                ctx.fillRect(x * blockSize, y * blockSize, blockSize - 1, blockSize - 1);
+            // 2. Flashlight effect (Light clipping)
+            flicker = Math.random() > 0.98 ? 0 : 150; // Flickering light
+            let gradient = ctx.createRadialGradient(mouse.x, mouse.y, 10, mouse.x, mouse.y, flicker);
+            gradient.addColorStop(0, 'rgba(255, 255, 200, 0.2)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 1)');
+
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = 'source-over';
+
+            // 3. Draw Items (only visible if light is near)
+            items.forEach(item => {
+                if(!item.picked) {
+                    let d = Math.sqrt((mouse.x-item.x)**2 + (mouse.y-item.y)**2);
+                    if(d < 120) {
+                        ctx.fillStyle = '#ffd700';
+                        ctx.beginPath();
+                        ctx.arc(item.x, item.y, 5, 0, Math.PI*2);
+                        ctx.fill();
+                    }
+                }
+            });
+
+            // 4. Draw Monster (Very faint)
+            if(monster.active) {
+                let d = Math.sqrt((mouse.x-monster.x)**2 + (mouse.y-monster.y)**2);
+                if(d < 100) {
+                    ctx.fillStyle = `rgba(255, 0, 0, ${0.1 + Math.random()*0.2})`;
+                    ctx.beginPath();
+                    ctx.arc(monster.x, monster.y, 25, 0, Math.PI*2);
+                    ctx.fill();
+                }
             }
-
-            // Draw Player
-            ctx.fillStyle = '#ffdbac';
-            ctx.fillRect(player.x, player.y, player.w, player.h);
-            ctx.fillStyle = '#0000ff'; // Shirt
-            ctx.fillRect(player.x, player.y + 10, player.w, player.h - 10);
         }
 
-        update();
+        function gameOver(text, color = "red") {
+            gameActive = false;
+            const ov = document.getElementById('overlay');
+            const st = document.getElementById('status');
+            ov.classList.remove('hidden');
+            st.innerText = text;
+            st.style.color = color;
+        }
     </script>
 </body>
 </html>
