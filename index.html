@@ -1,149 +1,144 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VOID SNIPER | Official Site</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <title>Web-Craft 2D</title>
     <style>
-        body { background-color: #050505; color: white; scroll-behavior: smooth; overflow-x: hidden; }
-        .neon-text { text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc; }
-        #game-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; background: black; }
-        .hero-bg { background: radial-gradient(circle at center, #111 0%, #000 100%); }
+        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: 'Courier New', monospace; }
+        canvas { display: block; image-rendering: pixelated; }
+        #ui { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: white; padding: 15px; border-radius: 8px; pointer-events: none; }
+        .key { color: #00ffcc; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <div id="site-wrapper">
-        <nav class="flex justify-between items-center p-6 bg-black/80 backdrop-blur-md sticky top-0 z-50">
-            <div class="text-2xl font-black tracking-tighter text-cyan-400">VOID_SNIPER</div>
-            <div class="hidden md:flex space-x-8 text-sm font-bold uppercase tracking-widest">
-                <a href="#features" class="hover:text-cyan-400">Features</a>
-                <a href="#" class="hover:text-cyan-400">Leaderboard</a>
-                <a href="#" class="hover:text-cyan-400">Community</a>
-            </div>
-            <button onclick="launchGame()" class="bg-cyan-500 text-black px-6 py-2 rounded-full font-black hover:bg-white transition">PLAY NOW</button>
-        </nav>
-
-        <header class="hero-bg h-screen flex flex-col items-center justify-center text-center px-4">
-            <h1 class="text-7xl md:text-9xl font-black mb-6 tracking-tighter italic">VOID<span class="text-cyan-400">SNIPER</span></h1>
-            <p class="text-gray-400 max-w-2xl text-lg mb-10">The ultimate browser-based 3D survival experience. Face the shadows. Survive the void.</p>
-            <button onclick="launchGame()" class="border-2 border-cyan-400 px-12 py-4 rounded-xl text-2xl font-bold hover:bg-cyan-400 hover:text-black transition duration-300">INITIALIZE MISSION</button>
-        </header>
-
-        <section id="features" class="py-24 bg-zinc-950 px-6">
-            <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
-                <div class="p-10 bg-black border border-zinc-800 rounded-3xl hover:border-cyan-400 transition">
-                    <h3 class="text-cyan-400 font-bold mb-4">01. 3D ENGINE</h3>
-                    <p class="text-gray-400">Custom WebGL rendering for high-speed action without the lag.</p>
-                </div>
-                <div class="p-10 bg-black border border-zinc-800 rounded-3xl hover:border-cyan-400 transition">
-                    <h3 class="text-cyan-400 font-bold mb-4">02. HOSTILE AI</h3>
-                    <p class="text-gray-400">Smart enemies that track your movements and fire with lethal precision.</p>
-                </div>
-                <div class="p-10 bg-black border border-zinc-800 rounded-3xl hover:border-cyan-400 transition">
-                    <h3 class="text-cyan-400 font-bold mb-4">03. INSTANT PLAY</h3>
-                    <p class="text-gray-400">No downloads required. Runs on any modern browser via GitHub Pages.</p>
-                </div>
-            </div>
-        </section>
+    <div id="ui">
+        <b>WEB-CRAFT 2D</b><br>
+        <span class="key">WASD / Arrows</span>: Move & Jump<br>
+        <span class="key">Left Click</span>: Mine Block<br>
+        <span class="key">Right Click</span>: Place Block<br>
+        <span class="key">1, 2, 3</span>: Switch Blocks
     </div>
-
-    <div id="game-container">
-        <div id="ui" class="absolute top-5 left-5 text-cyan-400 font-mono text-xl z-[110]">
-            KILLS: <span id="score">0</span> | HEALTH: <span id="health">100</span>%
-        </div>
-        <div id="crosshair" class="fixed top-1/2 left-1/2 w-4 h-4 border-2 border-cyan-400 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[110]"></div>
-        <button onclick="location.reload()" class="absolute top-5 right-5 bg-red-600 text-white px-4 py-2 rounded z-[110]">EXIT GAME</button>
-    </div>
+    <canvas id="gameCanvas"></canvas>
 
     <script>
-        // LAUNCH LOGIC
-        function launchGame() {
-            document.getElementById('site-wrapper').style.display = 'none';
-            document.getElementById('game-container').style.display = 'block';
-            init3DGame();
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game Constants
+        const blockSize = 32;
+        const gravity = 0.5;
+        const jumpForce = -10;
+        const moveSpeed = 4;
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // World Data
+        let world = {};
+        let selectedBlock = 1; // 1: Grass, 2: Dirt, 3: Stone
+        const blockColors = { 1: '#55aa55', 2: '#8b5a2b', 3: '#777777' };
+
+        // Player Data
+        const player = {
+            x: 100, y: 0,
+            w: 24, h: 28,
+            vx: 0, vy: 0,
+            onGround: false
+        };
+
+        // Generate World
+        for (let x = 0; x < canvas.width / blockSize; x++) {
+            let surfaceY = Math.floor(canvas.height / 2 / blockSize) + Math.floor(Math.sin(x * 0.2) * 2);
+            for (let y = surfaceY; y < canvas.height / blockSize; y++) {
+                let type = (y === surfaceY) ? 1 : (y < surfaceY + 3 ? 2 : 3);
+                world[`${x},${y}`] = type;
+            }
         }
 
-        // 3D GAME ENGINE
-        function init3DGame() {
-            let score = 0, health = 100;
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x020205);
-            scene.fog = new THREE.Fog(0x020205, 5, 40);
+        // Input Handling
+        const keys = {};
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.key === '1') selectedBlock = 1;
+            if (e.key === '2') selectedBlock = 2;
+            if (e.key === '3') selectedBlock = 3;
+        });
+        window.addEventListener('keyup', e => keys[e.code] = false);
 
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.getElementById('game-container').appendChild(renderer.domElement);
+        // Build/Mine Handling
+        canvas.addEventListener('mousedown', e => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = Math.floor((e.clientX - rect.left) / blockSize);
+            const mouseY = Math.floor((e.clientY - rect.top) / blockSize);
+            
+            if (e.button === 0) delete world[`${mouseX},${mouseY}`]; // Left click
+            if (e.button === 2) world[`${mouseX},${mouseY}`] = selectedBlock; // Right click
+        });
+        canvas.oncontextmenu = (e) => e.preventDefault();
 
-            // Lighting & Grid
-            scene.add(new THREE.AmbientLight(0x404040));
-            const grid = new THREE.GridHelper(200, 80, 0x00ffcc, 0x050505);
-            grid.position.y = -2;
-            scene.add(grid);
+        function update() {
+            // Horizontal Move
+            player.vx = 0;
+            if (keys['KeyA'] || keys['ArrowLeft']) player.vx = -moveSpeed;
+            if (keys['KeyD'] || keys['ArrowRight']) player.vx = moveSpeed;
 
-            // Player Gun
-            const gun = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.5), new THREE.MeshPhongMaterial({color: 0x222222}));
-            scene.add(gun);
-
-            // Enemy Setup
-            let enemies = [];
-            function spawn() {
-                const mesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), new THREE.MeshPhongMaterial({color: 0xff0000}));
-                const a = Math.random() * Math.PI * 2;
-                mesh.position.set(Math.cos(a)*30, 0, Math.sin(a)*30);
-                scene.add(mesh);
-                enemies.push(mesh);
+            // Jump
+            if ((keys['KeyW'] || keys['Space'] || keys['ArrowUp']) && player.onGround) {
+                player.vy = jumpForce;
+                player.onGround = false;
             }
-            for(let i=0; i<6; i++) spawn();
 
-            // Controls
-            let yaw = 0, pitch = 0;
-            document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
-            document.addEventListener('click', () => document.body.requestPointerLock());
-            document.addEventListener('mousemove', (e) => {
-                if(document.pointerLockElement) {
-                    yaw -= e.movementX * 0.002;
-                    pitch -= e.movementY * 0.002;
-                    pitch = Math.max(-1.5, Math.min(1.5, pitch));
-                }
-            });
+            // Gravity
+            player.vy += gravity;
+            player.x += player.vx;
+            player.y += player.vy;
 
-            // Shooting
-            const ray = new THREE.Raycaster();
-            window.addEventListener('mousedown', () => {
-                if(!document.pointerLockElement) return;
-                ray.setFromCamera(new THREE.Vector2(0,0), camera);
-                const hits = ray.intersectObjects(enemies);
-                if(hits.length > 0) {
-                    scene.remove(hits[0].object);
-                    enemies = enemies.filter(e => e !== hits[0].object);
-                    score++; document.getElementById('score').innerText = score;
-                    spawn();
-                }
-            });
+            // Simple Collision
+            player.onGround = false;
+            Object.keys(world).forEach(key => {
+                let [bx, by] = key.split(',').map(Number);
+                let bxPos = bx * blockSize;
+                let byPos = by * blockSize;
 
-            function animate() {
-                requestAnimationFrame(animate);
-                camera.rotation.set(pitch, yaw, 0, 'YXZ');
-                gun.position.copy(camera.position); gun.rotation.copy(camera.rotation);
-                gun.translateZ(-0.5); gun.translateX(0.2); gun.translateY(-0.2);
-
-                enemies.forEach(e => {
-                    e.lookAt(camera.position);
-                    e.translateZ(0.04);
-                    if(e.position.distanceTo(camera.position) < 2) {
-                        health -= 0.5;
-                        document.getElementById('health').innerText = Math.floor(health);
-                        if(health <= 0) location.reload();
+                // Basic Box Collision
+                if (player.x < bxPos + blockSize && player.x + player.w > bxPos &&
+                    player.y < byPos + blockSize && player.y + player.h > byPos) {
+                    
+                    // Reset position to top of block
+                    if (player.vy > 0 && player.y + player.h - player.vy <= byPos) {
+                        player.y = byPos - player.h;
+                        player.vy = 0;
+                        player.onGround = true;
+                    } else if (player.vy < 0) {
+                        player.y = byPos + blockSize;
+                        player.vy = 0;
+                    } else {
+                        player.x -= player.vx;
                     }
-                });
-                renderer.render(scene, camera);
-            }
-            animate();
+                }
+            });
+
+            draw();
+            requestAnimationFrame(update);
         }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw World
+            for (let key in world) {
+                let [x, y] = key.split(',').map(Number);
+                ctx.fillStyle = blockColors[world[key]];
+                ctx.fillRect(x * blockSize, y * blockSize, blockSize - 1, blockSize - 1);
+            }
+
+            // Draw Player
+            ctx.fillStyle = '#ffdbac';
+            ctx.fillRect(player.x, player.y, player.w, player.h);
+            ctx.fillStyle = '#0000ff'; // Shirt
+            ctx.fillRect(player.x, player.y + 10, player.w, player.h - 10);
+        }
+
+        update();
     </script>
 </body>
 </html>
