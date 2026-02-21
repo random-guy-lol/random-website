@@ -2,164 +2,148 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Website</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+    <title>VOID SNIPER | Official Site</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-
-        body {
-            background-color: #f4f6f9;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        header {
-            background: #2c3e50;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        nav {
-            background: #34495e;
-            padding: 10px;
-            text-align: center;
-        }
-
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-            font-weight: bold;
-        }
-
-        nav a:hover {
-            color: #1abc9c;
-        }
-
-        .hero {
-            padding: 60px 20px;
-            text-align: center;
-            background: white;
-        }
-
-        .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-        }
-
-        .btn {
-            background: #1abc9c;
-            color: white;
-            padding: 12px 25px;
-            text-decoration: none;
-            border-radius: 5px;
-            display: inline-block;
-        }
-
-        .btn:hover {
-            background: #16a085;
-        }
-
-        .section {
-            padding: 50px 20px;
-            text-align: center;
-        }
-
-        .cards {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-top: 30px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            width: 280px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        footer {
-            background: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 15px;
-            margin-top: 40px;
-        }
-
-        @media (max-width: 768px) {
-            .cards {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
+        body { background-color: #050505; color: white; scroll-behavior: smooth; overflow-x: hidden; }
+        .neon-text { text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc; }
+        #game-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; background: black; }
+        .hero-bg { background: radial-gradient(circle at center, #111 0%, #000 100%); }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>My Website</h1>
-    <p>Simple. Clean. Modern.</p>
-</header>
+    <div id="site-wrapper">
+        <nav class="flex justify-between items-center p-6 bg-black/80 backdrop-blur-md sticky top-0 z-50">
+            <div class="text-2xl font-black tracking-tighter text-cyan-400">VOID_SNIPER</div>
+            <div class="hidden md:flex space-x-8 text-sm font-bold uppercase tracking-widest">
+                <a href="#features" class="hover:text-cyan-400">Features</a>
+                <a href="#" class="hover:text-cyan-400">Leaderboard</a>
+                <a href="#" class="hover:text-cyan-400">Community</a>
+            </div>
+            <button onclick="launchGame()" class="bg-cyan-500 text-black px-6 py-2 rounded-full font-black hover:bg-white transition">PLAY NOW</button>
+        </nav>
 
-<nav>
-    <a href="#">Home</a>
-    <a href="#about">About</a>
-    <a href="#services">Services</a>
-    <a href="#contact">Contact</a>
-</nav>
+        <header class="hero-bg h-screen flex flex-col items-center justify-center text-center px-4">
+            <h1 class="text-7xl md:text-9xl font-black mb-6 tracking-tighter italic">VOID<span class="text-cyan-400">SNIPER</span></h1>
+            <p class="text-gray-400 max-w-2xl text-lg mb-10">The ultimate browser-based 3D survival experience. Face the shadows. Survive the void.</p>
+            <button onclick="launchGame()" class="border-2 border-cyan-400 px-12 py-4 rounded-xl text-2xl font-bold hover:bg-cyan-400 hover:text-black transition duration-300">INITIALIZE MISSION</button>
+        </header>
 
-<section class="hero">
-    <h1>Welcome to My Website</h1>
-    <p>This is a responsive HTML starter template you can customize.</p>
-    <a href="#about" class="btn">Learn More</a>
-</section>
-
-<section id="about" class="section">
-    <h2>About Us</h2>
-    <p>We create modern and responsive websites using simple HTML and CSS.</p>
-</section>
-
-<section id="services" class="section">
-    <h2>Our Services</h2>
-    <div class="cards">
-        <div class="card">
-            <h3>Web Design</h3>
-            <p>Clean and modern designs tailored to your needs.</p>
-        </div>
-        <div class="card">
-            <h3>Development</h3>
-            <p>Fast, responsive, and optimized websites.</p>
-        </div>
-        <div class="card">
-            <h3>SEO</h3>
-            <p>Improve your visibility and reach more customers.</p>
-        </div>
+        <section id="features" class="py-24 bg-zinc-950 px-6">
+            <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
+                <div class="p-10 bg-black border border-zinc-800 rounded-3xl hover:border-cyan-400 transition">
+                    <h3 class="text-cyan-400 font-bold mb-4">01. 3D ENGINE</h3>
+                    <p class="text-gray-400">Custom WebGL rendering for high-speed action without the lag.</p>
+                </div>
+                <div class="p-10 bg-black border border-zinc-800 rounded-3xl hover:border-cyan-400 transition">
+                    <h3 class="text-cyan-400 font-bold mb-4">02. HOSTILE AI</h3>
+                    <p class="text-gray-400">Smart enemies that track your movements and fire with lethal precision.</p>
+                </div>
+                <div class="p-10 bg-black border border-zinc-800 rounded-3xl hover:border-cyan-400 transition">
+                    <h3 class="text-cyan-400 font-bold mb-4">03. INSTANT PLAY</h3>
+                    <p class="text-gray-400">No downloads required. Runs on any modern browser via GitHub Pages.</p>
+                </div>
+            </div>
+        </section>
     </div>
-</section>
 
-<section id="contact" class="section">
-    <h2>Contact Us</h2>
-    <p>Email: your@email.com</p>
-</section>
+    <div id="game-container">
+        <div id="ui" class="absolute top-5 left-5 text-cyan-400 font-mono text-xl z-[110]">
+            KILLS: <span id="score">0</span> | HEALTH: <span id="health">100</span>%
+        </div>
+        <div id="crosshair" class="fixed top-1/2 left-1/2 w-4 h-4 border-2 border-cyan-400 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[110]"></div>
+        <button onclick="location.reload()" class="absolute top-5 right-5 bg-red-600 text-white px-4 py-2 rounded z-[110]">EXIT GAME</button>
+    </div>
 
-<footer>
-    <p>&copy; 2026 My Website. All Rights Reserved.</p>
-</footer>
+    <script>
+        // LAUNCH LOGIC
+        function launchGame() {
+            document.getElementById('site-wrapper').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            init3DGame();
+        }
 
+        // 3D GAME ENGINE
+        function init3DGame() {
+            let score = 0, health = 100;
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x020205);
+            scene.fog = new THREE.Fog(0x020205, 5, 40);
+
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('game-container').appendChild(renderer.domElement);
+
+            // Lighting & Grid
+            scene.add(new THREE.AmbientLight(0x404040));
+            const grid = new THREE.GridHelper(200, 80, 0x00ffcc, 0x050505);
+            grid.position.y = -2;
+            scene.add(grid);
+
+            // Player Gun
+            const gun = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.5), new THREE.MeshPhongMaterial({color: 0x222222}));
+            scene.add(gun);
+
+            // Enemy Setup
+            let enemies = [];
+            function spawn() {
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), new THREE.MeshPhongMaterial({color: 0xff0000}));
+                const a = Math.random() * Math.PI * 2;
+                mesh.position.set(Math.cos(a)*30, 0, Math.sin(a)*30);
+                scene.add(mesh);
+                enemies.push(mesh);
+            }
+            for(let i=0; i<6; i++) spawn();
+
+            // Controls
+            let yaw = 0, pitch = 0;
+            document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
+            document.addEventListener('click', () => document.body.requestPointerLock());
+            document.addEventListener('mousemove', (e) => {
+                if(document.pointerLockElement) {
+                    yaw -= e.movementX * 0.002;
+                    pitch -= e.movementY * 0.002;
+                    pitch = Math.max(-1.5, Math.min(1.5, pitch));
+                }
+            });
+
+            // Shooting
+            const ray = new THREE.Raycaster();
+            window.addEventListener('mousedown', () => {
+                if(!document.pointerLockElement) return;
+                ray.setFromCamera(new THREE.Vector2(0,0), camera);
+                const hits = ray.intersectObjects(enemies);
+                if(hits.length > 0) {
+                    scene.remove(hits[0].object);
+                    enemies = enemies.filter(e => e !== hits[0].object);
+                    score++; document.getElementById('score').innerText = score;
+                    spawn();
+                }
+            });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                camera.rotation.set(pitch, yaw, 0, 'YXZ');
+                gun.position.copy(camera.position); gun.rotation.copy(camera.rotation);
+                gun.translateZ(-0.5); gun.translateX(0.2); gun.translateY(-0.2);
+
+                enemies.forEach(e => {
+                    e.lookAt(camera.position);
+                    e.translateZ(0.04);
+                    if(e.position.distanceTo(camera.position) < 2) {
+                        health -= 0.5;
+                        document.getElementById('health').innerText = Math.floor(health);
+                        if(health <= 0) location.reload();
+                    }
+                });
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+    </script>
 </body>
 </html>
